@@ -1,0 +1,5 @@
+#!/bin/bash
+# encerra uma sessao do Claude pelo pid (chamado pelo × do painel): TERM e, se nao sair em 3 s, KILL
+p="$1"; [[ "$p" =~ ^[0-9]+$ ]] || exit 1
+kill -TERM "$p" 2>/dev/null; sleep 3; kill -0 "$p" 2>/dev/null && kill -KILL "$p"
+exit 0

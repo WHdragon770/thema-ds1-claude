@@ -1,0 +1,66 @@
+﻿PET DE TELA - SOLAIRE DE ASTORA
+===============================
+
+O Solaire anda em cima da barra de tarefas de cada monitor. Ele para, olha para você, fica de costas, vira ao mudar
+de direção. ($SUMIR = $true faz ele sumir uns minutos de vez em quando.)
+ESCALADA: às vezes vai até a borda de fora da tela e escala (sobe, fica pendurado, desce); outras vezes escolhe
+uma janela aberta (não maximizada), pula até ela e escala a lateral. Se a janela tem espaço em cima, ele sobe nela,
+anda por cima e pula de volta pra barra; se não tem, sobe até uma altura, fica pendurado e desce. Se a janela mexer
+ele vai junto; se fechar, minimizar ou maximizar, ele cai e fica tonto. Chances: $SUBIR_JANELA e $SUBIR_TELA.
+Teste na hora (WSL): ~/bin/solaire_aviso janela "" acao   ou   ~/bin/solaire_aviso tela "" acao
+Só PowerShell + WPF, nada para instalar. ~1% de um núcleo da CPU.
+Aqui é o Solaire de Astora. Quando termina uma caminhada (e quando volta de sumir ou desce da subida rápida)
+às vezes nasce um sol acima dele e ele faz o PRAISE THE SUN \[T]/. Duplo clique nele: louva o sol na hora.
+Chance de louvar ao terminar a caminhada: $LOUVOR no topo do pet.ps1 (0.3 = 30%).
+
+FALAS E AVISOS
+- De 40 em 40 a 120 s ele fala uma frase do jogo num balão ($FALAS e $FALA_CADA no topo do pet.ps1).
+- Tarefa concluída: qualquer programa grava um .json {"titulo", "texto", "tipo": "ok"|"erro"} em
+  %LOCALAPPDATA%\PetSolaire\avisos. O sol aparece com o nome da tarefa, ele faz Praise the Sun e o aviso
+  fica na tela até fechar no ×. No WSL: ~/bin/solaire_aviso "Nome" "detalhe" [ok|erro].
+  Avisam sozinhos: o Claude quando termina um turno de 20 s ou mais (hook Stop, ~/bin/claude_status.py)
+  e as tarefas em 2º plano do ~/bin/barra quando escrevem FIM/ERRO (coletor ~/bin/claude_painel.py).
+
+TESTAR / INSTALAR
+- TESTAR.bat: abre o pet direto desta pasta (bom para ir ajustando a spritesheet).
+- INSTALAR.bat: copia para %LOCALAPPDATA%\PetSolaire, põe para abrir com o Windows e abre.
+- Arrastar com o botão esquerdo: ao soltar, ele volta planando até a borda mais próxima.
+- Botão direito: menu (fogueira, painel do Claude, Claude novo, Escrever mensagem, Louvar o Sol, Dispensar).
+- Arrastar arquivo em cima dele: pergunta se é pra resumir ou só olhar e abre um Claude novo com o arquivo
+  (janela nova no tmux "main"; ~/bin/solaire_claude no WSL).
+- Invasão: ~/bin/solaire_aviso "Título" "detalhe" invasao "https://link" abre a faixa vermelha "VOCÊ FOI INVADIDO";
+  ele fica em guarda (espada e escudo) até abrir (clique) ou fechar cada caso.
+- Mensagens de orange soapstone (lembretes): ~/bin/lembrete 15h "Ligar pro fulano" (ou menu > Escrever mensagem).
+  Na hora aparece a marca laranja no chão, ele vai até ela e abre a mensagem com Feito / +10 min / +1 h.
+
+SPRITESHEET (spritesheet.png)
+Uma imagem PNG com fundo TRANSPARENTE, em grade: 8 colunas x 10 linhas, nesta ordem (quantos quadros cada linha usa: $QUADROS):
+  linha 1  frente     olhando para você (parado, virando)
+  linha 2  costas     de costas (subindo pela lateral, "olhando a tela")
+  linha 3  direita    virado para a direita (andando para a direita)
+  linha 4  esquerda   virado para a esquerda (andando para a esquerda)
+  linha 5  parado     parado respirando, pluma balançando (8)
+  linha 6  louvor     Praise the Sun: 0 parado, 1 agacha, 2 pulo, 3-7 braços para o sol em loop (8)
+  linha 7  tonto      depois que você arrasta e solta (8)
+  linha 8  escalar    agarrado numa parede à direita, subindo (8)
+  linha 9  escalar_e  o mesmo, parede à esquerda (8)
+  linha 10 combate    em guarda com espada e escudo (invasão) (8)
+sol.png: o sol, quadros quadrados lado a lado (gira enquanto ele louva).
+- Todas as células do mesmo tamanho (a do Solaire tem 48x67 px; folha de 384x670, desenhada por gerar_ref.py). O pet divide a imagem
+  pela grade sozinho: largura/colunas e altura/linhas.
+- Encoste o bicho no FUNDO de cada célula (a base da célula é o "chão"), centralizado na horizontal.
+- Os quadros de cada linha tocam em loop. Se não tiver animação, repita o mesmo desenho nas colunas.
+- Outra quantidade de colunas ou outra ordem de linhas: mude $COLUNAS / $LINHAS no topo do pet.ps1.
+
+CONFIGURAÇÃO (topo do pet.ps1)
+  $SHEET       nome do arquivo da spritesheet
+  $COLUNAS     quadros por linha
+  $LINHAS      o que cada linha mostra, de cima para baixo
+  $ANIM_FPS    velocidade da animação
+  $K           ampliação (3 = cada pixel vira 3x3, sem borrar; para sprite grande use 1)
+  $VELOCIDADE  velocidade andando (px/s)
+  $SUMIR       $false para ele nunca sumir
+Se escrever acentos no pet.ps1, salve em "UTF-8 com BOM" (o PowerShell 5 estraga acentos sem o BOM).
+
+DESINSTALAR
+Apague %LOCALAPPDATA%\PetSolaire e o atalho "PetSolaire" em shell:startup.

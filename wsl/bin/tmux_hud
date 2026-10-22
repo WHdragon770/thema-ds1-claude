@@ -1,0 +1,10 @@
+#!/bin/bash
+# lado direito da barra do tmux no estilo HUD do DS1:
+# HUMANIDADE = Claudes abertos | PESO = memória do WSL em uso (verde ágil, laranja médio, vermelho = "fat roll", PC perto de travar)
+h=$(pgrep -x claude | wc -l)
+read -r tot disp < <(awk '/^MemTotal/{t=$2} /^MemAvailable/{a=$2} END{print t, a}' /proc/meminfo)
+peso=$(( (tot - disp) * 100 / tot ))
+if   [ "$peso" -lt 60 ]; then c="#6fae5a"; e="ágil"
+elif [ "$peso" -lt 85 ]; then c="#e09a30"; e="médio"
+else c="#e04030"; e="pesado"; fi
+printf "#[fg=#8a7a5a]HUMANIDADE #[fg=#ffffff,bold]%s#[nobold]  #[fg=#8a7a5a]PESO #[fg=%s,bold]%s%% #[nobold]" "$h" "$c" "$peso"

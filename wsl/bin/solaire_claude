@@ -1,0 +1,28 @@
+#!/bin/bash
+# Abre um Claude novo a partir do PetSolaire (menu do clique direito / arquivo arrastado nele).
+# uso: solaire_claude <modo> [lista.txt]   modo: novo | resumir | olhar
+#   lista.txt = caminhos do Windows, um por linha (UTF-8), gravado pelo pet.ps1
+# Abre numa janela nova da sessão tmux que estiver aberta (a 1ª da lista); sem tmux, abre uma aba do Windows Terminal.
+modo="$1"; lista="$2"
+arqs=()
+if [ -n "$lista" ]; then
+    l=$(wslpath -u "$lista" 2>/dev/null || echo "$lista")
+    while IFS= read -r p; do
+        p="${p%$'\r'}"; p="${p#$'\xef\xbb\xbf'}"; [ -z "$p" ] && continue
+        arqs+=("$(wslpath -u "$p" 2>/dev/null || echo "$p")")
+    done < "$l"
+fi
+lst=""; for a in "${arqs[@]}"; do lst+=$'\n'"- $a"; done
+case "$modo" in
+    resumir)   prompt="Resume esses arquivos pra mim (o Solaire trouxe):$lst"; nome="resumo" ;;
+    olhar)     prompt="Dá uma olhada nesses arquivos e me diz o que são e o que dá pra fazer com eles:$lst"; nome="arquivo" ;;
+    *)         prompt=""; nome="claude" ;;
+esac
+cmd="cd ~ && claude"; [ -n "$prompt" ] && cmd+=" $(printf %q "$prompt")"
+[ -n "$DRY" ] && { echo "$cmd"; exit; }
+sessao=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | head -1)
+if [ -n "$sessao" ]; then
+    tmux new-window -t "$sessao:" -n "$nome" "bash -lc $(printf %q "$cmd"); exec bash"
+else
+    wt.exe -w 0 new-tab -p "Claude DS1" wsl.exe -e bash -lc "$cmd; exec bash" >/dev/null 2>&1 &
+fi

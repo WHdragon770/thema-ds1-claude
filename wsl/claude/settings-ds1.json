@@ -1,0 +1,173 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/.claude/statusline-ds1.py",
+    "padding": 0,
+    "refreshInterval": 1
+  },
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Bonfire Lit",
+      "Praise the Sun",
+      "Git Gud",
+      "Jolly Cooperating",
+      "Kindling the Flame",
+      "Linking the Fire",
+      "Hollowing",
+      "Rolling",
+      "Parrying",
+      "Backstabbing",
+      "Estus Chugging",
+      "Try Finger But Hole",
+      "Ringing the Bell",
+      "Fashion Souls",
+      "Summoning Solaire",
+      "Skipping Blighttown",
+      "Killing Asylum Demon",
+      "Killing Taurus Demon",
+      "Killing Bell Gargoyles",
+      "Killing Capra Demon",
+      "Killing Gaping Dragon",
+      "Killing Moonlight Butterfly",
+      "Killing Chaos Witch Quelaag",
+      "Killing Stray Demon",
+      "Killing Iron Golem",
+      "Killing Ornstein and Smough",
+      "Killing Pinwheel",
+      "Killing Gravelord Nito",
+      "Killing Great Grey Wolf Sif",
+      "Killing Seath the Scaleless",
+      "Killing Four Kings",
+      "Killing Crossbreed Priscilla",
+      "Killing Dark Sun Gwyndolin",
+      "Killing Ceaseless Discharge",
+      "Killing Demon Firesage",
+      "Killing Centipede Demon",
+      "Killing Bed of Chaos",
+      "Killing Gwyn, Lord of Cinder",
+      "Killing Sanctuary Guardian",
+      "Killing Knight Artorias",
+      "Killing Black Dragon Kalameet",
+      "Killing Manus, Father of the Abyss"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/bin/painel --se-fechado",
+            "timeout": 30,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "~/bin/limites --se-fechado",
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/bin/claude_status.py",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""lembrete QUANDO "texto"   -> mensagem de orange soapstone do PetSolaire na hora marcada
+   QUANDO: 15h | 15:30 | 15h30 | amanhã 9h | 24/10 10h | +30m | +2h | agora
+   lembrete lista            -> mostra os marcados
+   lembrete apagar ID        -> apaga um
+Grava %LOCALAPPDATA%\\PetSolaire\\lembretes\\<id>.json {id, quando 'AAAA-MM-DDTHH:MM', texto}. O pet.ps1 confere a cada 5 s."""
+import datetime as dt, glob, json, os, re, sys, time
+
+D = "__LOCALAPPDATA_WSL__/PetSolaire/lembretes"
+
+def quando(txt, agora=None):
+    agora = agora or dt.datetime.now().replace(second=0, microsecond=0)
+    t = txt.strip().lower()
+    if t in ("agora", "já", "ja"): return agora
+    m = re.fullmatch(r"\+\s*(\d+)\s*(m|min|h|d)", t)
+    if m:
+        n = int(m[1]); u = m[2]
+        return agora + (dt.timedelta(minutes=n) if u.startswith("m") else dt.timedelta(hours=n) if u == "h" else dt.timedelta(days=n))
+    dia = agora.date(); explicito = False
+    m = re.match(r"(amanhã|amanha|hoje|depois de amanhã)\s*", t)
+    if m:
+        dia += dt.timedelta(days={"hoje": 0, "amanhã": 1, "amanha": 1}.get(m[1], 2)); t = t[m.end():]; explicito = True
+    m = re.match(r"(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\s*", t)
+    if m:
+        a = int(m[3]) if m[3] else dia.year; a += 2000 if a < 100 else 0
+        dia = dt.date(a, int(m[2]), int(m[1])); t = t[m.end():]; explicito = True
+    t = re.sub(r"^(às|as|a)\s+", "", t.strip())
+    m = re.fullmatch(r"(\d{1,2})(?:[:h](\d{2})?)?h?", t) if t else None
+    if not m:
+        if explicito and not t: return dt.datetime.combine(dia, dt.time(9, 0))
+        raise SystemExit(f"não entendi o horário: {txt!r} (ex.: 15h, 15:30, amanhã 9h, 24/10 10h, +30m)")
+    r = dt.datetime.combine(dia, dt.time(int(m[1]), int(m[2] or 0)))
+    if r < agora and not explicito: r += dt.timedelta(days=1)          # "9h" depois das 9 = amanhã
+    return r
+
+def criar(q, texto):
+    os.makedirs(D, exist_ok=True)
+    i = f"{time.time():.3f}".replace(".", "")
+    tmp = f"{D}/{i}.tmp"
+    json.dump({"id": i, "quando": q.strftime("%Y-%m-%dT%H:%M"), "texto": texto, "criado": dt.datetime.now().strftime("%Y-%m-%dT%H:%M")},
+              open(tmp, "w", encoding="utf-8"), ensure_ascii=False)
+    os.replace(tmp, f"{D}/{i}.json")
+    return i
+
+def lista():
+    out = []
+    for f in glob.glob(f"{D}/*.json"):
+        try: out.append(json.load(open(f, encoding="utf-8-sig")))
+        except Exception: pass
+    return sorted(out, key=lambda x: x["quando"])
+
+if __name__ == "__main__":
+    a = sys.argv[1:]
+    if not a or a[0] in ("lista", "-l"):
+        for x in lista(): print(f"{x['id']}  {x['quando'].replace('T', ' ')}  {x['texto']}")
+    elif a[0] == "apagar":
+        for i in a[1:]:
+            try: os.remove(f"{D}/{i}.json"); print("apagado", i)
+            except FileNotFoundError: print("não achei", i)
+    else:
+        if len(a) < 2: raise SystemExit(__doc__)
+        q = quando(a[0]); i = criar(q, " ".join(a[1:]))
+        print(f"lembrete {i} marcado pra {q.strftime('%d/%m %H:%M')}: {' '.join(a[1:])}")

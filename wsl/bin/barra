@@ -1,0 +1,32 @@
+#!/bin/bash
+# barra "Titulo" arquivo_progresso  -> a tarefa aparece no PAINEL do Claude (Documentos\painel_claude.ps1), sem janela separada.
+# O arquivo tem linhas "atual total texto"; no fim "FIM msg" ou "ERRO msg" (o painel mostra e abre o aviso).
+# Liga a tarefa a sessao do Claude que chamou (procura o pid dela subindo os processos pais); sem sessao vai pra "avulsas".
+# BARRA_JANELA=1 barra ... abre a barra antiga em janela propria (barra_progresso.ps1).
+P=$(realpath -m "$2")
+if [ "$BARRA_JANELA" = 1 ]; then
+  W='\\wsl.localhost\'"$WSL_DISTRO_NAME"$(echo "$P" | tr / '\\')
+  nohup setsid powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File '__THEMA_WIN__\barra_progresso.ps1' -Titulo "$1" -Arquivo "$W" >/dev/null 2>&1 &
+  exit 0
+fi
+python3 - "$1" "$P" <<'PY'
+import json, os, sys, time
+tit, arq = sys.argv[1], sys.argv[2]; H = os.path.expanduser("~/.claude"); D = f"{H}/status"; os.makedirs(D, exist_ok=True)
+sid, pid = None, os.getppid()
+while pid > 1 and not sid:                      # sobe os pais ate achar um processo do Claude registrado
+    try:
+        sid = json.load(open(f"{H}/sessions/{pid}.json")).get("sessionId")
+    except Exception:
+        pass
+    try: pid = int(open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()[1])
+    except Exception: break
+fn = f"{D}/{sid}.json" if sid else f"{D}/_avulsas.json"
+try: st = json.load(open(fn))
+except Exception: st = {}
+st.setdefault("tarefas", {})[arq] = {"titulo": tit, "desde": time.time()}
+json.dump(st, open(fn, "w"), ensure_ascii=False)
+PY
+# painel aberto? se nao, abre
+if ! powershell.exe -NoProfile -Command "if (Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { \$_.CommandLine -like '*painel_claude.ps1*' }) { exit 0 } else { exit 1 }" >/dev/null 2>&1; then
+  __HOME__/bin/painel
+fi

@@ -1,0 +1,4 @@
+#!/bin/bash
+# abre a fogueira do dia (BONFIRE LIT + resumo) no Windows. -r = direto no resumo, sem animação
+A=""; [ "$1" = "-r" ] && A=",'-SemAnimacao'"
+powershell.exe -NoProfile -c "Start-Process powershell.exe -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File','__THEMA_WIN__\Fogueira\fogueira.ps1'$A"

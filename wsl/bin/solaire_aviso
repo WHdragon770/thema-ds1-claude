@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""solaire_aviso "Nome da tarefa" ["detalhe"] [ok|erro|invasao] [link]
+(invasao = faixa vermelha "VOCÊ FOI INVADIDO", o Solaire fica em guarda; clique no caso abre o link)
+Manda um aviso para o PetSolaire (Windows): o sol aparece com o nome da tarefa, o Solaire faz Praise the Sun
+e o aviso fica na tela até fechar no ×. O pet lê %LOCALAPPDATA%\\PetSolaire\\avisos\\*.json a cada segundo."""
+import json, os, sys, time
+
+D = "__LOCALAPPDATA_WSL__/PetSolaire/avisos"
+
+def avisar(titulo, texto="", tipo="ok", link=""):
+    os.makedirs(D, exist_ok=True)
+    nome = f"{time.time():.6f}".replace(".", "_")
+    tmp = f"{D}/{nome}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"titulo": str(titulo)[:120], "texto": str(texto)[:200], "tipo": tipo, "t": time.time(), "link": link}, f, ensure_ascii=False)
+    os.replace(tmp, f"{D}/{nome}.json")
+
+if __name__ == "__main__":
+    a = sys.argv[1:] or ["Tarefa concluída"]
+    avisar(a[0], a[1] if len(a) > 1 else "", a[2] if len(a) > 2 else "ok", a[3] if len(a) > 3 else "")

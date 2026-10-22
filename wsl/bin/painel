@@ -1,0 +1,10 @@
+#!/bin/bash
+# abre o painel das sessoes do Claude no Windows (Documentos\painel_claude.ps1); so 1 por vez
+# --se-fechado: so abre se nao estiver aberto (usado pelo hook SessionStart)
+ACHA='Get-CimInstance Win32_Process | Where-Object { $_.Name -eq "powershell.exe" -and $_.CommandLine -like "*painel_claude.ps1*" -and $_.ProcessId -ne $PID }'
+if [ "$1" = "--se-fechado" ]; then
+    [ -n "$(powershell.exe -NoProfile -Command "$ACHA | Select-Object -First 1 -ExpandProperty ProcessId" 2>/dev/null | tr -d '\r\n ')" ] && exit 0
+else
+    powershell.exe -NoProfile -Command "$ACHA | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" 2>/dev/null
+fi
+nohup setsid powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File '__THEMA_WIN__\painel_claude.ps1' -Distro "$WSL_DISTRO_NAME" >/dev/null 2>&1 &
