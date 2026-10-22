@@ -1,0 +1,3 @@
+3 10 lendo pedidos
+7 10 montando o resumo
+FIM dash atualizado

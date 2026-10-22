@@ -367,7 +367,25 @@ function Claude-Novo($modo, $lista) {
     try { Start-Process wsl.exe -ArgumentList $a -WindowStyle Hidden } catch {}
     Falar 'Vou chamar ajuda! Uma cooperação animada!' 3
 }
+# o seu dash (opcional): itens "menu" do __THEMA_WIN__\meu_dash.json entram no topo do menu (ver README, "Ligar o seu dash")
+#   {"titulo": "...", "abrir": "https://... ou C:\\pasta\\dash.html"} | {"titulo": "...", "claude": "/comando ou pedido"} | {"titulo": "...", "rodar": "C:\\pasta\\atualizar.bat"}
+$MEU_DASH = '__THEMA_WIN__\meu_dash.json'
+$DASH_MENU = @(try { @(([System.IO.File]::ReadAllText($MEU_DASH, [System.Text.Encoding]::UTF8) | ConvertFrom-Json).menu) | Where-Object { $_.titulo } } catch {})
+function Dash-Acao($i) {
+    $x = $DASH_MENU[$i]
+    try {
+        if ($x.abrir) { Start-Process ([string]$x.abrir) }
+        elseif ($x.rodar) { Start-Process ([string]$x.rodar) -WindowStyle Hidden }
+        elseif ($x.claude) {
+            $f = Join-Path $env:LOCALAPPDATA 'PetSolaire\dash_prompt.txt'
+            [System.IO.File]::WriteAllText($f, [string]$x.claude, (New-Object System.Text.UTF8Encoding($false)))
+            Claude-Novo 'pedido' "`"$f`""
+        }
+    } catch { Falar 'Não consegui abrir isso do seu dash.' 3 }
+}
 $MENU = @(
+    @(for ($i = 0; $i -lt $DASH_MENU.Count; $i++) { ,@([string]$DASH_MENU[$i].titulo, [scriptblock]::Create("Dash-Acao $i")) })
+    @(if ($DASH_MENU.Count) { '-' })
     ,@('Fogueira do dia', { try { Start-Process powershell.exe -WindowStyle Hidden -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "__THEMA_WIN__\Fogueira\fogueira.ps1" -SemAnimacao' } catch {} })
     ,@('Painel do Claude', { try { Start-Process powershell.exe -WindowStyle Hidden -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "__THEMA_WIN__\painel_claude.ps1" -Distro __DISTRO__' } catch {} })
     ,@('Novo Claude', { Claude-Novo 'novo' })

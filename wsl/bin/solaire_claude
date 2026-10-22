@@ -1,10 +1,14 @@
 #!/bin/bash
 # Abre um Claude novo a partir do PetSolaire (menu do clique direito / arquivo arrastado nele).
-# uso: solaire_claude <modo> [lista.txt]   modo: novo | resumir | olhar
+# uso: solaire_claude <modo> [lista.txt]   modo: novo | resumir | olhar | pedido
 #   lista.txt = caminhos do Windows, um por linha (UTF-8), gravado pelo pet.ps1
+#   pedido: o arquivo tem o texto/comando a mandar pro Claude (item "claude" do meu_dash.json, ver README)
 # Abre numa janela nova da sessão tmux que estiver aberta (a 1ª da lista); sem tmux, abre uma aba do Windows Terminal.
 modo="$1"; lista="$2"
 arqs=()
+if [ "$modo" = pedido ]; then
+    pedido=$(cat "$(wslpath -u "$lista" 2>/dev/null || echo "$lista")" 2>/dev/null); lista=""
+fi
 if [ -n "$lista" ]; then
     l=$(wslpath -u "$lista" 2>/dev/null || echo "$lista")
     while IFS= read -r p; do
@@ -15,6 +19,7 @@ fi
 lst=""; for a in "${arqs[@]}"; do lst+=$'\n'"- $a"; done
 case "$modo" in
     resumir)   prompt="Resume esses arquivos pra mim (o Solaire trouxe):$lst"; nome="resumo" ;;
+    pedido)    prompt="$pedido"; nome="dash" ;;
     olhar)     prompt="Dá uma olhada nesses arquivos e me diz o que são e o que dá pra fazer com eles:$lst"; nome="arquivo" ;;
     *)         prompt=""; nome="claude" ;;
 esac

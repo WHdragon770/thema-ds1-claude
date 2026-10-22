@@ -1,12 +1,14 @@
 ﻿# Fogueira do dia: ao ligar o PC escurece a tela, aparece "BONFIRE LIT" igual no Dark Souls e depois o resumo do dia
-# (as mensagens de orange soapstone marcadas pra hoje e o limite do Claude). Clique fora do quadro ou Esc fecha.
+# (as mensagens de orange soapstone marcadas pra hoje, o resumo do seu dash se tiver e o limite do Claude).
+# Clique fora do quadro ou Esc fecha. O seu dash entra pelo "fogueira" do meu_dash.json (ver README, "Ligar o seu dash").
 param([switch]$SemAnimacao)
 
 # ======== CONFIGURAÇÃO ========
 $PASTA     = $PSScriptRoot
 $LEMBRETES = Join-Path $env:LOCALAPPDATA 'PetSolaire\lembretes'                # ~/bin/lembrete (mensagens do Solaire)
 $LIMITES   = '\\wsl.localhost\__DISTRO____HOME_BS__\.claude\status\limites.json'   # só lê se o WSL já estiver ligado
-$MAX_HOJE  = 8                                                                  # mensagens mostradas
+$MAX_HOJE  = 8                                                                  # mensagens (e itens por seção do dash) mostrados
+$MEU_DASH  = '__THEMA_WIN__\meu_dash.json'                                       # opcional
 # ==============================
 
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
@@ -20,6 +22,20 @@ $hojeTxt = (Get-Date).ToString('yyyy-MM-dd') + 'T23:59'
 $msgs = @(Get-ChildItem $LEMBRETES -Filter *.json -ErrorAction SilentlyContinue | ForEach-Object {
     try { [System.IO.File]::ReadAllText($_.FullName, [System.Text.Encoding]::UTF8) | ConvertFrom-Json } catch {}
 } | Where-Object { $_ -and [string]$_.quando -le $hojeTxt } | Sort-Object quando)
+# seu dash (opcional): "gerar" roda antes (até 20 s) e "resumo" é o JSON com as seções {secoes: [{titulo, resumo, vazio, itens: [{tag, cor, titulo, detalhe}]}]}
+$dash = $null; $dashErro = $false; $cfg = $null
+try { $cfg = ([System.IO.File]::ReadAllText($MEU_DASH, [System.Text.Encoding]::UTF8) | ConvertFrom-Json).fogueira } catch {}
+if ($cfg -and $cfg.resumo) {
+    if ($cfg.gerar) {
+        $g = [string]$cfg.gerar
+        try {
+            $pr = if ($g -like '*.ps1') { Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$g`"" -WindowStyle Hidden -PassThru }
+                  else { Start-Process $g -WindowStyle Hidden -PassThru }
+            [void]$pr.WaitForExit(20000)
+        } catch {}
+    }
+    try { $dash = [System.IO.File]::ReadAllText([string]$cfg.resumo, [System.Text.Encoding]::UTF8) | ConvertFrom-Json } catch { $dashErro = $true }
+}
 $lim = $null
 if (Get-Process -Name 'vmmem', 'vmmemWSL' -ErrorAction SilentlyContinue) {
     try { $lim = ([System.IO.File]::ReadAllText($LIMITES) | ConvertFrom-Json).rate_limits } catch {}
@@ -118,6 +134,23 @@ foreach ($m in ($msgs | Select-Object -First $MAX_HOJE)) {
 }
 if ($msgs.Count -gt $MAX_HOJE) { [void]$pilha.Children.Add((Texto "+ $($msgs.Count - $MAX_HOJE)" 11 $APAGADO '102,2,0,0')) }
 
+foreach ($sec in @($dash.secoes)) {
+    if (-not $sec -or -not $sec.titulo) { continue }
+    $itens = @($sec.itens | Where-Object { $_ -and $_.titulo })
+    Secao $(if ($itens.Count) { "$($sec.titulo) ($($itens.Count))" } else { [string]$sec.titulo })
+    if ($sec.resumo) { [void]$pilha.Children.Add((Texto ([string]$sec.resumo) 13 $BRANCO -Negrito)) }
+    elseif (-not $itens.Count) { [void]$pilha.Children.Add((Texto $(if ($sec.vazio) { [string]$sec.vazio } else { 'Nada por aqui.' }) 12 $SUB)) }
+    foreach ($x in ($itens | Select-Object -First $MAX_HOJE)) {
+        $cor = if ([string]$x.cor -match '^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$') { [string]$x.cor } else { '#8A4A1C' }
+        Linha ([string]$x.tag) $cor ([string]$x.titulo) ([string]$x.detalhe)
+    }
+    if ($itens.Count -gt $MAX_HOJE) { [void]$pilha.Children.Add((Texto "+ $($itens.Count - $MAX_HOJE) no dash" 11 $APAGADO '102,2,0,0')) }
+}
+if ($dashErro) {
+    Secao 'SEU DASH'
+    [void]$pilha.Children.Add((Texto 'Não consegui ler o resumo do seu dash. Confira o "resumo" no meu_dash.json.' 12 $SUB))
+}
+
 if ($lim) {
     Secao 'LIMITE DO CLAUDE'
     $p = @()
@@ -137,6 +170,7 @@ function Botao($txt, $acao) {
     $b.Add_MouseLeftButtonUp({ param($s, $e) $e.Handled = $true; & $this.Tag })
     [void]$bt.Children.Add($b)
 }
+if ($cfg -and $cfg.abrir) { Botao 'Abrir o dash' { try { Start-Process ([string]$cfg.abrir) } catch {}; Fechar } }
 Botao 'Levantar' { Fechar }
 [void]$pilha.Children.Add($bt)
 $t = Texto 'clique fora do quadro ou Esc para levantar da fogueira' 10.5 $APAGADO '' '0,8,0,0'; $t.HorizontalAlignment = 'Center'; [void]$pilha.Children.Add($t)

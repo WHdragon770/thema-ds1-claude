@@ -1,0 +1,17 @@
+{
+  "secoes": [
+    {
+      "titulo": "PRA HOJE",
+      "vazio": "Nada vencendo hoje. Pode descansar na fogueira.",
+      "itens": [
+        { "tag": "PRAZO", "cor": "#B0281C", "titulo": "Responder o pedido 123", "detalhe": "vence às 18h" },
+        { "tag": "ENVIO", "cor": "#2F6A3A", "titulo": "Postar 2 pacotes", "detalhe": "" }
+      ]
+    },
+    {
+      "titulo": "PEDIDOS",
+      "resumo": "3 aguardando · 1 em disputa · 2 novos desde ontem",
+      "itens": []
+    }
+  ]
+}

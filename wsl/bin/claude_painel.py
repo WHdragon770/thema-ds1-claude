@@ -8,6 +8,17 @@ import subprocess, json, os, sys, time, glob, re
 H = os.path.expanduser("~/.claude")
 TCK = os.sysconf("SC_CLK_TCK")
 IGNORA = ("claude_status.py", "statusline.py", "claude_painel.py", "-mcp")
+MEU_DASH = "__LOCALAPPDATA_WSL__/ThemaDS1/meu_dash.json"   # opcional: "painel": [{titulo, progresso}] (ver README, "Ligar o seu dash")
+
+def caminho_wsl(c):
+    """C:\\pasta\\arq.txt -> /mnt/c/pasta/arq.txt (caminhos do WSL passam direto)"""
+    m = re.match(r"^([A-Za-z]):[\\/](.*)$", c)
+    return f"/mnt/{m.group(1).lower()}/" + m.group(2).replace("\\", "/") if m else c
+
+def tarefas_dash():
+    try: itens = json.load(open(MEU_DASH, encoding="utf-8-sig")).get("painel") or []
+    except Exception: return {}
+    return {caminho_wsl(x["progresso"]): {"titulo": x.get("titulo", ""), "desde": 0} for x in itens if isinstance(x, dict) and x.get("progresso")}
 
 def boot():
     return time.time() - float(open("/proc/uptime").read().split()[0])
@@ -180,6 +191,7 @@ def coleta():
                      "tokens": tokens(sid)})
     try: av = le_tarefas(json.load(open(f"{H}/status/_avulsas.json")), agora)   # barras abertas fora de uma sessao
     except Exception: av = []
+    av += le_tarefas({"tarefas": tarefas_dash()}, agora)
     if av:
         sess.append({"sid": "_avulsas", "pid": 0, "nome": "Tarefas em segundo plano", "nome_cc": "", "cwd": "", "estado": "pronto",
                      "ocupado": False, "ferramenta": "", "detalhe": "", "ultimo_prompt": "", "ultima_ferramenta": "", "t_ferr": 0,

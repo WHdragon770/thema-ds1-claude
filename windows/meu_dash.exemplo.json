@@ -1,0 +1,15 @@
+{
+  "menu": [
+    { "titulo": "Meu dashboard", "abrir": "C:\\Users\\VOCE\\Documents\\Meu Dash\\dashboard.html" },
+    { "titulo": "Atualizar o dash", "rodar": "C:\\Users\\VOCE\\Documents\\Meu Dash\\atualizar.bat" },
+    { "titulo": "Rodar o meu check", "claude": "/meu-check" }
+  ],
+  "fogueira": {
+    "resumo": "C:\\Users\\VOCE\\Documents\\Meu Dash\\hoje.json",
+    "gerar": "C:\\Users\\VOCE\\Documents\\Meu Dash\\gerar_hoje.bat",
+    "abrir": "C:\\Users\\VOCE\\Documents\\Meu Dash\\dashboard.html"
+  },
+  "painel": [
+    { "titulo": "Meu dash (atualização)", "progresso": "C:\\Users\\VOCE\\Documents\\Meu Dash\\progresso.txt" }
+  ]
+}

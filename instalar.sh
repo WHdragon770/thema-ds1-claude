@@ -106,4 +106,7 @@ case "$r" in s|S|sim) powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$
 powershell.exe -NoProfile -c "Start-Process powershell.exe -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File','$LOCAL_WIN\\PetSolaire\\pet.ps1'"
 echo
 echo "Pronto! Abra o atalho \"Claude DS1\" na Área de Trabalho. O Solaire já está na barra de tarefas."
+if [ -f "$THEMA_WSL/meu_dash.json" ]; then echo "Seu dash continua ligado ($THEMA_WIN\\meu_dash.json)."
+elif [ -f ~/meu_dash.json ]; then cp ~/meu_dash.json "$THEMA_WSL/meu_dash.json" && echo "Religuei o seu dash (~/meu_dash.json)."
+else echo "Tem um dash seu? Ligue no Solaire, na fogueira e no painel: README, \"Ligar o seu dash\"."; fi
 echo "Desfazer: bash desinstalar.sh"
