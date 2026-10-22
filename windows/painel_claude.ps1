@@ -24,7 +24,7 @@ $OURO = Cor 255 196 170 112; $BEGE = Cor 255 226 218 200; $CINZA = Cor 255 150 1
 $cfgArq = Join-Path $env:APPDATA "painel_claude.json"
 $cfg = @{ x = -1; y = 60; compacto = $true; zoom = 1.0 }
 try { $j = Get-Content $cfgArq -Raw | ConvertFrom-Json; $cfg.x = $j.x; $cfg.y = $j.y; $cfg.compacto = $j.compacto; if ($j.zoom) { $cfg.zoom = [double]$j.zoom } } catch {}
-function SalvaCfg { try { (@{ x = $f.Left; y = $f.Top; compacto = $st.compacto; zoom = $st.zoom } | ConvertTo-Json) | Set-Content $cfgArq } catch {} }
+function SalvaCfg { if ($f.WindowState -eq "Minimized") { return }; try { (@{ x = $f.Left; y = $f.Top; compacto = $st.compacto; zoom = $st.zoom } | ConvertTo-Json) | Set-Content $cfgArq } catch {} }
 
 $W = 470
 $area = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
@@ -32,7 +32,9 @@ $Z0 = [Math]::Min([double]2.0, [Math]::Max([double]0.6, [double]$cfg.zoom))
 $f = New-Object System.Windows.Forms.Form -Property @{
   Text = "Claude"; FormBorderStyle = "None"; Width = [int]($W * $Z0); KeyPreview = $true; Height = 120; StartPosition = "Manual"; TopMost = $true; ShowInTaskbar = $true
   BackColor = (Cor 255 10 9 8); Opacity = 0.95 }
-$f.Left = if ($cfg.x -ge 0) { $cfg.x } else { $area.Right - [int]($W * $Z0) - 20 }; $f.Top = $cfg.y
+$naTela = $null -ne ([System.Windows.Forms.Screen]::AllScreens | ? { $_.WorkingArea.Contains([int]$cfg.x + 40, [int]$cfg.y + 10) })
+if (-not $naTela) { $cfg.x = $area.Right - [int]($W * $Z0) - 20; $cfg.y = 60 }
+$f.Left = $cfg.x; $f.Top = $cfg.y
 $f.GetType().GetProperty("DoubleBuffered", [System.Reflection.BindingFlags]"Instance,NonPublic").SetValue($f, $true)
 
 $st = @{ vistos = @{}; flash = @{}; dados = $null; compacto = [bool]$cfg.compacto; abertos = @{}; linhas = @(); fase = 0.0; hover = ""; erro = "Despertando..."; zoom = $Z0; hLog = 120 }
