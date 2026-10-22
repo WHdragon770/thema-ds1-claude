@@ -25,6 +25,8 @@ O Solaire de Astora vive na sua barra de tarefas, o terminal vira o menu da fogu
 | **Cursor dourado** | Seta, mãozinha e texto dourados (grandes, 144 px) e o sol do Solaire girando no lugar da ampulheta. Opcional. |
 
 ![solaire](imagens/solaire.png)
+
+> Como o Solaire e os outros desenhos foram feitos (referência, scripts, cada versão e como regerar): **[docs/BONECOS.md](docs/BONECOS.md)**
 ![fogueira](imagens/fogueira.png)
 ![soapstone](imagens/soapstone.png)
 ![cursor](imagens/cursor.png)
